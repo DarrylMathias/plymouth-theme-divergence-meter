@@ -55,7 +55,7 @@ To rebuild the assets or previews you also need **ImageMagick 7**, **ffmpeg** an
 ### Quick install
 
 ```bash
-git clone https://github.com/<you>/plymouth-theme-divergence-meter.git
+git clone https://github.com/DarrylMathias/plymouth-theme-divergence-meter.git
 cd plymouth-theme-divergence-meter
 sudo ./install.sh
 ```
