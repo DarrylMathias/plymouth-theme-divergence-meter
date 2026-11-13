@@ -1,0 +1,9 @@
+[Plymouth Theme]
+Name=Divergence Meter
+Description=Steins;Gate divergence meter (boot: 1.048596, shutdown: 0.571024)
+ModuleName=script
+
+[script]
+ImageDir=/usr/share/plymouth/themes/divergence-meter
+ScriptFile=/usr/share/plymouth/themes/divergence-meter/divergence-meter.script
+ConsoleLogBackgroundColor=0x00000000

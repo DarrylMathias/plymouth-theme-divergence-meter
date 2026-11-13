@@ -1,0 +1,116 @@
+# Divergence Meter — Steins;Gate Plymouth theme
+# Boot:     flicker -> 1.048596  "EL PSY KONGROO"
+# Shutdown: flicker -> 0.571024  "α WORLDLINE"
+# Refresh runs at 50 fps; all timings below are in frames.
+
+W = Window.GetWidth();
+H = Window.GetHeight();
+S = W / 2880;                       # assets are drawn for a 2880 px wide screen
+
+mode = Plymouth.GetMode();
+if (mode == "shutdown" || mode == "reboot")
+  {
+    target[0] = 0; target[2] = 5; target[3] = 7; target[4] = 1; target[5] = 0; target[6] = 2; target[7] = 4;
+    tagline_file = "tagline-shutdown.png";
+    DARK = 5;           # 0.1 s of unlit tubes
+    LOCK_START = 35;    # 0.7 s: start locking digits
+    LOCK_STEP = 5;      # one tube every 0.1 s
+    TAG_START = 70;     # tagline after the last tube locks
+    TAG_FADE = 10;      # 0.2 s fade
+  }
+else
+  {
+    target[0] = 1; target[2] = 0; target[3] = 4; target[4] = 8; target[5] = 5; target[6] = 9; target[7] = 6;
+    tagline_file = "tagline-boot.png";
+    DARK = 0;           # flicker straight away
+    LOCK_START = 20;    # 0.4 s: start locking digits
+    LOCK_STEP = 4;      # one tube every 0.08 s
+    TAG_START = 36;     # tagline fades in while the last tubes lock
+    TAG_FADE = 12;      # fully visible at ~1.0 s
+  }
+FLICKER = 2;            # new random digit every 2 frames
+
+# Background
+bg.sprite = Sprite(Image("bg.png").Scale(W, H));
+bg.sprite.SetPosition(0, 0, -100);
+
+# Tubes
+TW = Math.Int(200 * S);
+TH = Math.Int(380 * S);
+GAP = Math.Int(18 * S);
+X0 = Math.Int((W - (8 * TW + 7 * GAP)) / 2);
+Y0 = Math.Int((H - TH) / 2 - 60 * S);
+
+tube_image = Image("tube.png").Scale(TW, TH);
+dot_image = Image("dot.png").Scale(TW, TH);
+for (d = 0; d < 10; d++)
+    digit_image[d] = Image("d" + d + ".png").Scale(TW, TH);
+
+for (i = 0; i < 8; i++)
+  {
+    tube[i] = Sprite(tube_image);
+    tube[i].SetPosition(X0 + i * (TW + GAP), Y0, 0);
+    glow[i] = Sprite();
+    glow[i].SetPosition(X0 + i * (TW + GAP), Y0, 1);
+  }
+
+# Tagline (fades in once the meter has locked)
+tagline.sprite = Sprite(Image(tagline_file).Scale(W, Math.Int(110 * S)));
+tagline.sprite.SetPosition(0, Y0 + TH + Math.Int(50 * S), 2);
+tagline.sprite.SetOpacity(0);
+
+
+frame = 0;
+
+fun random_digit ()
+  {
+    local.r = Math.Int(Math.Random() * 10);
+    if (r > 9) r = 9;
+    return r;
+  }
+
+fun refresh_callback ()
+  {
+    global.frame++;
+    if (global.frame >= DARK)
+      {
+        glow[1].SetImage(dot_image);
+
+        local.locked = 0;
+        if (global.frame >= LOCK_START)
+            locked = Math.Int((global.frame - LOCK_START) / LOCK_STEP) + 1;
+
+        # true on every FLICKER-th frame
+        local.tick = (global.frame - Math.Int(global.frame / FLICKER) * FLICKER) == 0;
+
+        for (local.i = 0; i < 8; i++)
+          {
+            if (i != 1)
+              {
+                # lock order: tube 0, then tubes 2..7
+                local.order = i;
+                if (i > 1)
+                    order = i - 1;
+
+                if (order < locked)
+                    glow[i].SetImage(digit_image[target[i]]);
+                else
+                  {
+                    if (tick)
+                        glow[i].SetImage(digit_image[random_digit()]);
+                  }
+              }
+          }
+
+        # fade the tagline in (timing depends on boot/shutdown, see top)
+        if (global.frame > TAG_START)
+          {
+            local.t = (global.frame - TAG_START) / TAG_FADE;
+            if (t > 1)
+                t = 1;
+            tagline.sprite.SetOpacity(t);
+          }
+      }
+  }
+
+Plymouth.SetRefreshFunction(refresh_callback);
